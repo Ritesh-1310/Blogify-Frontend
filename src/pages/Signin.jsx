@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { signin } from "../api/auth";
+import axios from "../utils/axios";
 
 const Signin = () => {
   const navigate = useNavigate();
-  const { setUser } = useAuth(); // From AuthContext
+  const { setUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -14,31 +16,13 @@ const Signin = () => {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:8002/api/user/signin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email, password }),
-      });
+      await signin({ email, password });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Login failed");
-
-      // Fetch user profile immediately after signin
-      const profileRes = await fetch("http://localhost:8002/api/user/profile", {
-        credentials: "include",
-      });
-
-      if (profileRes.ok) {
-        const profile = await profileRes.json();
-        setUser(profile); // update global user state
-        navigate("/");
-      } else {
-        throw new Error("Failed to fetch user profile");
-      }
-
+      const profileRes = await axios.get("/user/profile");
+      setUser(profileRes.data);
+      navigate("/");
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || "Login failed");
     }
   };
 
@@ -78,5 +62,3 @@ const Signin = () => {
 };
 
 export default Signin;
-
-

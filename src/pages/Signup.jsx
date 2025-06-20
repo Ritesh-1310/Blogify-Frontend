@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { signup } from '../api/auth';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -12,17 +13,10 @@ const Signup = () => {
     e.preventDefault();
     setError('');
     try {
-      const res = await fetch('http://localhost:8002/api/user/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fullName, email, password }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      await signup({ fullName, email, password });
       navigate('/signin');
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || 'Signup failed');
     }
   };
 

@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { getBlogById, deleteBlog, addComment } from "../api/blog";
 
 const BlogDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+
   const [blog, setBlog] = useState(null);
   const [comments, setComments] = useState([]);
   const [comment, setComment] = useState("");
 
   useEffect(() => {
     const fetchBlog = async () => {
-      const res = await fetch(`http://localhost:8002/api/blog/${id}`);
-      const data = await res.json();
+      const data = await getBlogById(id);
       setBlog(data.blog);
       setComments(data.comments);
     };
@@ -21,13 +22,8 @@ const BlogDetail = () => {
   }, [id]);
 
   const handleAddComment = async () => {
-    const res = await fetch(`http://localhost:8002/api/blog/${id}/comment`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ content: comment }),
-    });
-    const newComment = await res.json();
+    if (!comment.trim()) return;
+    const newComment = await addComment(id, comment);
     setComments((prev) => [...prev, newComment]);
     setComment("");
   };
@@ -36,17 +32,8 @@ const BlogDetail = () => {
     const confirmed = window.confirm("Are you sure you want to delete this blog?");
     if (!confirmed) return;
 
-    const res = await fetch(`http://localhost:8002/api/blog/${id}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-
-    if (res.ok) {
-      navigate("/");
-    } else {
-      const err = await res.json();
-      alert(err.message || "Failed to delete blog");
-    }
+    await deleteBlog(id);
+    navigate("/");
   };
 
   if (!blog) return <p>Loading...</p>;

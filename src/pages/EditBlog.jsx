@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { getBlogById, updateBlog } from "../api/blog";
 
 const EditBlog = () => {
   const { id } = useParams();
@@ -11,8 +12,7 @@ const EditBlog = () => {
 
   useEffect(() => {
     const fetchBlog = async () => {
-      const res = await fetch(`http://localhost:8002/api/blog/${id}`);
-      const data = await res.json();
+      const data = await getBlogById(id);
       setTitle(data.blog.title);
       setBody(data.blog.body);
       setCoverPreview(data.blog.coverImageURL);
@@ -34,19 +34,8 @@ const EditBlog = () => {
     formData.append("title", title);
     formData.append("body", body);
     if (coverImage) formData.append("coverImage", coverImage);
-
-    const res = await fetch(`http://localhost:8002/api/blog/${id}`, {
-      method: "PUT",
-      credentials: "include",
-      body: formData,
-    });
-
-    if (res.ok) {
-      navigate(`/blog/${id}`);
-    } else {
-      const error = await res.json();
-      alert(error.message || "Update failed");
-    }
+    await updateBlog(id, formData);
+    navigate(`/blog/${id}`);
   };
 
   return (
@@ -59,12 +48,7 @@ const EditBlog = () => {
             type="file"
             accept="image/*"
             onChange={handleImageChange}
-            className="block w-full text-sm text-gray-500
-                       file:mr-4 file:py-2 file:px-4
-                       file:rounded file:border-0
-                       file:text-sm file:font-semibold
-                       hover:file:bg-blue-100
-                       border rounded"
+            className="block w-full text-sm text-gray-500 border rounded file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold hover:file:bg-blue-100"
           />
           {coverPreview && (
             <img src={coverPreview} alt="Preview" className="mt-4 w-full h-[450px] object-cover rounded border" />
@@ -90,7 +74,9 @@ const EditBlog = () => {
             required
           />
         </div>
-        <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded">Update Blog</button>
+        <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded">
+          Update Blog
+        </button>
       </form>
     </div>
   );
